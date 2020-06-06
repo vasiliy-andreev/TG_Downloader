@@ -52,6 +52,7 @@ def CheckUser(message, Users=Users):
         print ('User {0} is new here'.format(UserName))
         return False
 
+
 print('Functions are loaded')
 
 
@@ -62,9 +63,6 @@ def Message(message):
         return
     bot.send_message(message.chat.id, 'You said '+message.text)
 
-        
-    
-    
 
 @bot.message_handler(content_types=['document'])
 def ReceiveFile(message,proxies=proxies):
@@ -95,10 +93,6 @@ def ReceiveFile(message,proxies=proxies):
                 DownloadFile(message)
             if call.data == 'no':
                 bot.send_message(message.chat.id, 'File {0} is not downloaded'.format(FileName))
-
-
-        
-
 
 
 bot.polling(none_stop=True)
