@@ -1,7 +1,6 @@
 import telebot
 from telebot import types
 import requests
-import os
 
 token = ''
 proxies=dict(http='socks5://username:password@ip:port', https='socks5://username:password@ip:port')
