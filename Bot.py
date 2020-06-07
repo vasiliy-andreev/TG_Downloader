@@ -94,5 +94,8 @@ def ReceiveFile(message,proxies=proxies):
             if call.data == 'no':
                 bot.send_message(message.chat.id, 'File {0} is not downloaded'.format(FileName))
 
-
-bot.polling(none_stop=True)
+whilt True:
+    try:
+        bot.polling(none_stop=True)
+    except:
+        pass
