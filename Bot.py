@@ -1,4 +1,5 @@
 import telebot
+import time
 from telebot import types
 
 token = ''
@@ -20,7 +21,7 @@ def GetDatabase(Database=Database):
         return FileList
 
 def WriteDatabase(FileName,Database=Database):
-    with open(Database,'r+') as f:
+    with open(Database,'a') as f:
         f.write(FileName+',')
         print('{0} is added to Database'.format(FileName))
 
@@ -98,4 +99,4 @@ whilt True:
     try:
         bot.polling(none_stop=True)
     except:
-        pass
+        time.spleep(30)
