@@ -36,10 +36,17 @@ while True:
     step = notLoaded(getTorrents())
     if len(torrents) == 0 and len(step) != 0:
         torrents = step.copy()
-    print (step, torrents)
+    #print (step, torrents)
     diff = set(list(torrents.keys())) - set(list(step.keys()))
     if len(diff) != 0:
         for entry in list(diff):
-            bot.send_message(ChatID, 'Completed: {0}'.format(str(entry)))
+            try:
+                bot = telebot.TeleBot(token, threaded=False)
+                telebot.apihelper.proxy = proxies
+                bot.send_message(ChatID, 'Completed: {0}'.format(str(entry)))
+            except:
+                time.sleep(5)
+                bot.send_message(ChatID, 'Completed: {0}'.format(str(entry)))
             diff = set()
             torrents = step.copy()
+
