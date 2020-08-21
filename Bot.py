@@ -13,7 +13,9 @@ path = ''
 torrents = ''
 FileMessage = None
 FileName = None
-Users=['firstname surname',]
+FileMessage = None
+FileName = None
+UsersFile = 'AuthDB'
 
 bot = telebot.TeleBot(token, threaded=False)
 telebot.apihelper.proxy = proxies
@@ -54,13 +56,20 @@ def Choice(chat_id,FileName):
     text = 'Файл {0} уже был загружен, всё равно сохранить?'.format(FileName)
     bot.send_message(chat_id,text=text,reply_markup=keyboard)
 
-def CheckUser(message, Users=Users):
-    UserName = message.from_user.first_name + ' ' + message.from_user.last_name
-    if UserName in Users:
-        print('User {0} in list'.format(UserName))
+def CheckUser(message):
+    FirstName = message.from_user.first_name
+    ID = message.from_user.id
+    with open(UsersFile,'r') as f:
+        Users = f.read()
+        Users = json.loads(Users)
+    if ID in Users['allow']:
+        print('User {0} in list'.format(FirstName))
         return True
     else:
-        print ('User {0} is new here'.format(UserName))
+        print ('User {0} is new here'.format(FirstName))
+        Users['deny'].append({FirstName:ID})
+        with open(UsersFile,'w') as f:
+            f.write(json.dumps(Users))
         return False
 
 def DLNAUpdate(chat_id):
@@ -86,6 +95,21 @@ def getTorrents():
     #for i in list(a.keys()): db[a[i]['name']]=a[i]['progress']
     return torrents.json()['result']['torrents']
 
+def magnet(link):
+    host = 'http://127.0.0.1:8112/json'
+    headers = {'Content-Type':'application/json'}
+    dataLogin = {"method":"auth.login","params":["deluge"],"id":133}
+    dataMagnet = {"method":"web.add_torrents","params":[[
+    {"path":"{0}".format(link),"options":{"file_priorities":[],"add_paused":False,"compact_allocation":False,
+    "download_location":"/srv/dev-disk-by-label-SSD/SSD/Share/","move_completed":False,
+    "move_completed_path":"/var/lib/deluged/Downloads","max_connections":-1,
+    "max_download_speed":-1,"max_upload_slots":-1,"max_upload_speed":-1,"prioritize_first_last_pieces":False}}]],"id":133}
+    login = requests.request('POST',host,headers=headers,data=json.dumps(dataLogin))
+    cookies = login.cookies
+    magnet = requests.request('POST',host, headers=headers, cookies=cookies, data=json.dumps(dataMagnet))
+    return magnet.json()
+
+
 def notLoaded(delugeInfo,chat_id):
     data = dict()
     for entry in list(delugeInfo.keys()):
@@ -99,13 +123,18 @@ print('Functions are loaded')
 @bot.message_handler(content_types=['text'])
 def Message(message):
     if CheckUser(message) is False:
-        bot.send_message(message.chat.id, 'You are is not allowd to write me')
+        bot.send_message(message.chat.id, 'You are not allowed to write me, your ID is: {0}'.format(message.from_user.id))
         return
     if message.text == 'DLNA':
         DLNAUpdate(message.chat.id)
         return
     if message.text == 'Get':
         notLoaded(getTorrents(), message.chat.id)
+        return
+    if "magnet" in message.text:
+        print(message.text)
+        magnet(message.text)
+        bot.send_message(message.chat.id, 'Magnet link loaded')
         return
     bot.send_message(message.chat.id, 'You said '+message.text)
 
@@ -145,11 +174,10 @@ def ReceiveFile(message,proxies=proxies):
 while True:
     time.sleep(2)
     try:
-        print('polling...')
         bot.infinity_polling(True)
     except:
-        print('it was except')
         time.sleep(3)
         os.system('nohup python3 myBot-inf.py &')
         time.sleep(1)
         exit()
+
