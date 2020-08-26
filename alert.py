@@ -3,7 +3,7 @@ import json
 import telebot
 import time
 
-ChatID = 
+ChatID = []
 token = ""
 proxies=dict(http='')
 bot = telebot.TeleBot(token, threaded=False)
@@ -30,23 +30,33 @@ def notLoaded(delugeInfo):
             data[delugeInfo[entry]['name']] = round(delugeInfo[entry]['progress'],2)
     return data
 
-torrents = notLoaded(getTorrents())
+oldQueue = notLoaded(getTorrents())
+#print('mark 0, oldQueue is', oldQueue)
 while True:
-    time.sleep(10)
-    step = notLoaded(getTorrents())
-    if len(torrents) == 0 and len(step) != 0:
-        torrents = step.copy()
-    #print (step, torrents)
-    diff = set(list(torrents.keys())) - set(list(step.keys()))
-    if len(diff) != 0:
-        for entry in list(diff):
+    time.sleep(6)
+    queue = notLoaded(getTorrents())
+    #print('mark 05, queue is ',queue)
+    if len(oldQueue) == 0 and len(queue) != 0:
+        oldQueue = queue.copy()
+        #print ('mark 1, oldQueue is ', oldQueue)
+    done = set(list(oldQueue.keys())) - set(list(queue.keys()))
+    #print('mark 2, done is', done)
+    if len(done) != 0:
+        for entry in list(done):
+            #print('mark 3, entry is', entry)
             try:
                 bot = telebot.TeleBot(token, threaded=False)
                 telebot.apihelper.proxy = proxies
-                bot.send_message(ChatID, 'Completed: {0}'.format(str(entry)))
+                for Chat in ChatID:
+                    bot.send_message(Chat, 'Completed:    {0}'.format(str(entry)))
             except:
-                time.sleep(5)
-                bot.send_message(ChatID, 'Completed: {0}'.format(str(entry)))
-            diff = set()
-            torrents = step.copy()
+                time.sleep(2)
+                for Chat in ChatID:
+                    bot.send_message(Chat, 'Completed:    {0}'.format(str(entry)))
+        done = set()
+        #print ('mark 4, done is',done)
+        oldQueue = queue.copy()
+        #print ('mark 5, oldQueue is ',oldQueue)
+
+
 
